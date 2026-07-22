@@ -8,30 +8,38 @@ Identity Management (Keycloak).
 | Komponente | Spezifikation |
 |---|---|
 | Gerät | GMKtec NucBox EVO-X2 |
-| CPU | AMD Ryzen AI MAX+ 395 |
-| RAM | 128 GB |
+| CPU | AMD Ryzen AI MAX+ 395 w/ Radeon 8060S |
+| RAM | 128 GB physisch — davon reserviert das BIOS ~64 GB als dediziertes GPU-VRAM (Unified Memory Architecture), der Rest (~61 GB) ist normaler System-RAM |
 | Storage | ~1.8 TB SSD |
 
 ## Software / Netzwerk
 
 - **OS:** Ubuntu Server 26.04 LTS
 - **IP:** statisch, `192.168.0.36`
-- **Container-Runtime:** Docker
-- **LLM-Runtime:** [Ollama](https://ollama.com)
-- **Identity Provider:** [Keycloak](https://www.keycloak.org) 26.4
+- **Orchestrierung:** k3s (single-node Kubernetes)
+- **LLM-Runtime:** [Ollama](https://ollama.com), GPU-beschleunigt über ROCm (siehe unten)
+- **Identity Provider:** [Keycloak](https://www.keycloak.org) 26.4 — siehe [homelab-keycloak](https://github.com/recica/homelab-keycloak)
+
+## GPU-Beschleunigung (ROCm)
+
+Die iGPU (Radeon 8060S) lief anfangs ungenutzt mit — Ollama fiel auf CPU-Inferenz zurück, obwohl `/dev/kfd` und `/dev/dri` vorhanden waren. Drei Dinge waren zusammen nötig, siehe `manifests/ollama-deployment.yaml`:
+
+1. `ollama/ollama:rocm`-Image statt `latest`
+2. `OLLAMA_IGPU_ENABLE=1` — iGPUs sind bei Ollama standardmäßig deaktiviert
+3. `securityContext.privileged: true` — ein unprivilegierter Pod bekam `EPERM` beim Lesen der GPU-Topologie unter `/sys/class/kfd`, trotz korrekter Datei-Rechte (Capability-Check, kein DAC-Problem)
+
+Ergebnis: `ollama ps` zeigt `100% GPU`, ROCm erkennt `64.0 GiB` VRAM.
 
 ## Installierte Ollama-Modelle
 
-| Modell | Größe |
-|---|---|
-| qwen2.5:32b | 19 GB |
-| llama3.2:latest | 2.0 GB |
+| Modell | Größe | Zweck |
+|---|---|---|
+| qwen2.5:32b | 19 GB | Allzweck, stark bei technischen Themen |
+| llama3.2:latest | 2.0 GB | Schnelle, kleine Anfragen |
 
 ## Keycloak
 
-- Läuft als Docker-Container (`keycloak`, Image `quay.io/keycloak/keycloak:26.4`, Dev-Modus)
-- Port: `8080`
-- Admin-Zugangsdaten wurden lokal generiert und **nicht** in diesem Repo gespeichert
+Läuft nicht mehr hier als Dev-Mode-Docker-Container, sondern produktiv auf dem k3s-Cluster (Postgres-Backend, Traefik-Ingress, echte Realm-Konfiguration). Details, Manifeste und Setup-Doku: [homelab-keycloak](https://github.com/recica/homelab-keycloak).
 
 ## Screenshots
 
