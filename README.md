@@ -30,12 +30,15 @@ Die iGPU (Radeon 8060S) lief anfangs ungenutzt mit — Ollama fiel auf CPU-Infer
 
 Ergebnis: `ollama ps` zeigt `100% GPU`, ROCm erkennt `64.0 GiB` VRAM.
 
+Gemessen mit `dolphin-mixtral` (26 GB, MoE): **29.5 Tokens/s** Generierung, **128.7 Tokens/s** Prompt-Verarbeitung — auf einer iGPU ein flüssig nutzbarer Wert, weit weg von der vorherigen CPU-only-Geschwindigkeit.
+
 ## Installierte Ollama-Modelle
 
 | Modell | Größe | Zweck |
 |---|---|---|
 | qwen2.5:32b | 19 GB | Allzweck, stark bei technischen Themen |
 | llama3.2:latest | 2.0 GB | Schnelle, kleine Anfragen |
+| dolphin-mixtral | 26 GB | Weniger restriktives Alignment für Grenzthemen (z.B. Security-Recherche), 29.5 Tok/s auf der GPU |
 
 ## Keycloak
 
