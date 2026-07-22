@@ -44,30 +44,49 @@ Gemessen mit `dolphin-mixtral` (26 GB, MoE): **29.5 Tokens/s** Generierung, **12
 
 Läuft nicht mehr hier als Dev-Mode-Docker-Container, sondern produktiv auf dem k3s-Cluster (Postgres-Backend, Traefik-Ingress, echte Realm-Konfiguration). Details, Manifeste und Setup-Doku: [homelab-keycloak](https://github.com/recica/homelab-keycloak).
 
-## Screenshots
+## Live-Verifikation
 
-Die folgenden Screenshots werden manuell ergänzt.
+Echte Command-Outputs vom laufenden Server, kein synthetisches Beispiel.
 
-### 1. `hostnamectl`
+### `hostnamectl`
 
-_Systeminformationen des Homelab-Servers._
+```
+ Static hostname: homelab
+Operating System: Ubuntu 26.04 LTS
+          Kernel: Linux 7.0.0-28-generic
+    Architecture: x86-64
+ Hardware Vendor: GMKtec
+  Hardware Model: NucBox_EVO-X2
+Firmware Version: EVO-X2 1.09
+```
 
-![hostnamectl](screenshots/hostnamectl.png)
+### `docker run hello-world`
 
-### 2. `docker run hello-world`
+```
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+```
 
-_Bestätigung, dass Docker korrekt installiert und funktionsfähig ist._
+### `ollama list`
 
-![docker hello-world](screenshots/docker-hello-world.png)
+```
+NAME                      ID              SIZE      MODIFIED
+dolphin-mixtral:latest    4f76c28c0414    26 GB     42 minutes ago
+qwen2.5:32b               9f13ba1299af    19 GB     9 days ago
+llama3.2:latest           a80c4f17acd5    2.0 GB    9 days ago
+```
 
-### 3. `ollama list`
+### `free -h` und `ollama ps` während aktiver Inferenz
 
-_Übersicht der installierten Ollama-Modelle._
+```
+$ free -h
+               total        used        free      shared  buff/cache   available
+Mem:            61Gi        4.4Gi        24Gi        83Mi        33Gi        57Gi
+Swap:           8.0Gi           0B       8.0Gi
 
-![ollama list](screenshots/ollama-list.png)
+$ ollama ps
+NAME                      ID              SIZE     PROCESSOR    CONTEXT    UNTIL
+dolphin-mixtral:latest    4f76c28c0414    31 GB    100% GPU     32768      4 minutes from now
+```
 
-### 4. `ollama run` mit `free -h` während der Inferenz
-
-_Speicherauslastung während ein Modell aktiv Inferenz durchführt._
-
-![ollama run mit free -h](screenshots/ollama-run-free.png)
+Der hohe `buff/cache`-Wert während der Inferenz zeigt, wie die Unified-Memory-Architektur funktioniert: GPU-Speicherzugriffe der iGPU laufen über denselben physischen RAM und tauchen im System als Cache auf, statt als separates, unsichtbares VRAM.
